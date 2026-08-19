@@ -7,8 +7,10 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node src/server.js",
+    "migrate": "sequelize-cli db:migrate",
     "seed": "node src/seed/seedStations.js",
-    "seed:admin": "node src/seed/seedAdmin.js"
+    "seed:admin": "node src/seed/seedAdmin.js",
+    "deploy": "npm run migrate && npm run seed && npm run seed:admin && npm start"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

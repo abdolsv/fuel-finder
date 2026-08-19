@@ -62,6 +62,8 @@ const coordinateOffsets = [
 
 const basePetrolPrice = 950;
 
+// Build station list.
+// 36 states + FCT × 5 brands = 185 stations.
 const stations = [];
 
 for (const location of stateLocations) {
@@ -71,64 +73,104 @@ for (const location of stateLocations) {
     stations.push({
       name: `${brands[i]} ${location.capital} Station`,
       brand: brands[i],
+      state: location.state,
       address: `${location.capital}, ${location.state} State`,
       lat: Number((location.lat + offset.lat).toFixed(6)),
       lng: Number((location.lng + offset.lng).toFixed(6)),
-      state: location.state,
     });
   }
 }
 
 async function seed() {
   try {
+    console.log('');
+    console.log('========================================');
+    console.log('Fuel Finder Station Seeder');
+    console.log('========================================');
+
     console.log('Connecting to database...');
 
     await sequelize.authenticate();
 
     console.log('Database connected.');
+    console.log(`Preparing ${stations.length} stations...`);
+    console.log('');
 
-    await sequelize.sync({ alter: true });
-
-    console.log(`Preparing to seed ${stations.length} stations...`);
-
-    let stationCount = 0;
-    let priceCount = 0;
+    let createdStations = 0;
+    let existingStations = 0;
+    let createdPriceReports = 0;
 
     for (const [index, stationData] of stations.entries()) {
-      const station = await Station.create({
-        name: stationData.name,
-        brand: stationData.brand,
-        address: stationData.address,
-        lat: stationData.lat,
-        lng: stationData.lng,
+      /*
+       * Find the station first.
+       *
+       * This makes the seeder safe to run repeatedly.
+       */
+      const [station, created] = await Station.findOrCreate({
+        where: {
+          name: stationData.name,
+          brand: stationData.brand,
+          state: stationData.state,
+        },
+
+        defaults: {
+          address: stationData.address,
+          lat: stationData.lat,
+          lng: stationData.lng,
+        },
       });
 
-      stationCount++;
+      if (created) {
+        createdStations++;
 
-      const variation = Math.floor(Math.random() * 60) - 20;
+        /*
+         * Generate a realistic demo petrol price.
+         *
+         * Base price: ₦950
+         * Variation: -₦20 to +₦39
+         */
+        const variation = Math.floor(Math.random() * 60) - 20;
 
-      const fuelAvailable = index % 6 !== 0;
+        /*
+         * Approximately 1 out of every 6 stations
+         * will initially report fuel unavailable.
+         */
+        const fuelAvailable = index % 6 !== 0;
 
-      await PriceReport.create({
-        stationId: station.id,
-        fuelType: 'petrol',
-        price: basePetrolPrice + variation,
-        reportedBy: 'seed-data',
-        fuelAvailable,
-      });
+        await PriceReport.create({
+          stationId: station.id,
+          fuelType: 'petrol',
+          price: basePetrolPrice + variation,
+          reportedBy: 'seed-data',
+          fuelAvailable,
+        });
 
-      priceCount++;
+        createdPriceReports++;
+
+        console.log(
+          `✓ Created: ${stationData.name} (${stationData.state})`
+        );
+      } else {
+        existingStations++;
+
+        console.log(
+          `• Exists:  ${stationData.name} (${stationData.state})`
+        );
+      }
     }
 
     console.log('');
     console.log('========================================');
-    console.log('Fuel Finder seeding completed successfully');
+    console.log('Fuel Finder seeding completed');
     console.log('========================================');
     console.log(`Locations covered: ${stateLocations.length}`);
-    console.log(`Stations created: ${stationCount}`);
-    console.log(`Price reports created: ${priceCount}`);
-    console.log('States: 36 + FCT');
+    console.log(`Expected stations: ${stations.length}`);
+    console.log(`New stations created: ${createdStations}`);
+    console.log(`Existing stations skipped: ${existingStations}`);
+    console.log(`New price reports: ${createdPriceReports}`);
+    console.log('Coverage: 36 states + FCT');
     console.log('========================================');
+    console.log('');
 
     await sequelize.close();
 
@@ -136,7 +178,7 @@ async function seed() {
   } catch (err) {
     console.error('');
     console.error('========================================');
-    console.error('Seeding failed');
+    console.error('❌ Station seeding failed');
     console.error('========================================');
     console.error(err);
     console.error('========================================');

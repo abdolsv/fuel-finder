@@ -7,22 +7,32 @@ const Station = sequelize.define('Station', {
     primaryKey: true,
     autoIncrement: true,
   },
+
   name: {
     type: DataTypes.STRING,
     allowNull: false,
   },
+
   brand: {
     type: DataTypes.STRING,
     allowNull: true,
   },
+
+  state: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+
   address: {
     type: DataTypes.STRING,
     allowNull: true,
   },
+
   lat: {
     type: DataTypes.FLOAT,
     allowNull: false,
   },
+
   lng: {
     type: DataTypes.FLOAT,
     allowNull: false,
