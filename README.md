@@ -2,15 +2,11 @@
 
 A web app that helps drivers locate nearby fuel stations, check recently reported prices, and most importantly see whether a station actually has fuel in stock before driving there. Built for the real-world pain point of fuel scarcity in Nigeria, where price is only half the problem.
 
-**[Live Demo](#) · [Video Walkthrough](#)**
-
----
+**[Live Demo](https://fuel-finder-pzfi.onrender.com/)**
 
 ## Why this exists
 
 Most fuel-finder tools only show price. But in markets where fuel scarcity is common, the more urgent question is: is there even fuel there right now? This app tracks both price and availability sourced from real driver reports, so you're not driving across town on a rumor.
-
----
 
 ## Features
 
@@ -21,8 +17,6 @@ Most fuel-finder tools only show price. But in markets where fuel scarcity is co
 - **Crowdsourced price reports** — any user can submit a new report for a station
 - **Price history** per station, not just the latest snapshot
 
----
-
 ## Tech Stack
 
 | Layer      | Technology                          |
@@ -30,10 +24,7 @@ Most fuel-finder tools only show price. But in markets where fuel scarcity is co
 | Backend    | Node.js, Express, Sequelize ORM      |
 | Database   | PostgreSQL                           |
 | Frontend   | React (Vite), Leaflet.js             |
-| Deployment | Railway / Render                     |
-
-
----
+| Deployment | Render                               |
 
 ## Getting Started (Local Development)
 
@@ -44,7 +35,7 @@ Most fuel-finder tools only show price. But in markets where fuel scarcity is co
 
 ### 1. Clone the repo
 ```bash
-git clone https://github.com/<your-username>/fuel-finder.git
+git clone https://github.com/abdolsv/fuel-finder.git
 cd fuel-finder
 ```
 
@@ -59,9 +50,8 @@ createdb fuelfinder -O fueluser
 ```bash
 cd backend
 cp .env.example .env
-# edit .env with your DB credentials / DATABASE_URL
 npm install
-npm run seed    # inserts ~12 sample Lagos stations
+npm run seed   
 npm start
 ```
 Backend runs at `http://localhost:5000`.
@@ -75,8 +65,6 @@ npm run dev
 ```
 Frontend runs at `http://localhost:5173`.
 
----
-
 ## Using Real Station Data
 
 The seed script uses a small hardcoded list of Lagos stations. To pull real fuel station data for any city:
@@ -85,8 +73,6 @@ The seed script uses a small hardcoded list of Lagos stations. To pull real fuel
 2. Search `amenity=fuel` within your city's map view
 3. Export the results as GeoJSON
 4. Adapt `backend/src/seed/seedStations.js` to read that GeoJSON and insert each station's name/lat/lng instead of the hardcoded array
-
----
 
 ## API Reference
 
@@ -115,9 +101,6 @@ The seed script uses a small hardcoded list of Lagos stations. To pull real fuel
   "reportedBy": "anonymous"
 }
 ```
-
----
-
 ## Deployment
 
 | Component | Recommended Host                          |
@@ -130,8 +113,6 @@ Before deploying the frontend, update `frontend/src/api.js` to point `API_BASE` 
 
 Don't forget to update your backend's CORS configuration to allow requests from your deployed frontend domain.
 
----
-
 ## Ideas for futher improvement
 
 - [ ] User accounts so reports carry more trust/reputation
@@ -139,12 +120,6 @@ Don't forget to update your backend's CORS configuration to allow requests from 
 - [ ] Historical price charts per station
 - [ ] Admin moderation for spam/inaccurate reports
 
----
-
 ## Contributing
 
 Issues and pull requests are welcome. If you're adding a new city's station data, please include the source of your GeoJSON export in the PR description.
-
-## License
-
-[MIT](./LICENSE)
