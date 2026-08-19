@@ -4,18 +4,24 @@ module.exports = {
   development: {
     use_env_variable: 'DATABASE_URL',
     dialect: 'postgres',
-    logging: false
+    logging: false,
   },
 
   test: {
     use_env_variable: 'DATABASE_URL',
     dialect: 'postgres',
-    logging: false
+    logging: false,
   },
 
   production: {
     use_env_variable: 'DATABASE_URL',
     dialect: 'postgres',
-    logging: false
-  }
+    logging: console.log, 
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false, 
+      },
+    },
+  },
 };
