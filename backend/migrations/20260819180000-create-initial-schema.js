@@ -3,100 +3,161 @@
 module.exports = {
   async up(queryInterface, Sequelize) {
     /*
-     * CREATE ENUM TYPES SAFELY (PostgreSQL specific)
-     */
-    await queryInterface.sequelize.query(`
-      DO $$ BEGIN
-        CREATE TYPE "enum_users_role" AS ENUM ('admin');
-      EXCEPTION
-        WHEN duplicate_object THEN null;
-      END $$;
-    `);
-
-    await queryInterface.sequelize.query(`
-      DO $$ BEGIN
-        CREATE TYPE "enum_price_reports_fuelType" AS ENUM ('petrol', 'diesel', 'kerosene', 'gas');
-      EXCEPTION
-        WHEN duplicate_object THEN null;
-      END $$;
-    `);
-
-    /*
      * USERS TABLE
      */
-    await queryInterface.sequelize.query(`
-      CREATE TABLE IF NOT EXISTS "users" (
-        "id" SERIAL PRIMARY KEY,
-        "email" VARCHAR(255) NOT NULL UNIQUE,
-        "passwordHash" VARCHAR(255) NOT NULL,
-        "role" "enum_users_role" NOT NULL DEFAULT 'admin',
-        "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-        "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-      );
-    `);
+    await queryInterface.createTable('users', {
+      id: {
+        type: Sequelize.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+        allowNull: false,
+      },
+      email: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        unique: true,
+      },
+      passwordHash: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      role: {
+        type: Sequelize.ENUM('admin'),
+        allowNull: false,
+        defaultValue: 'admin',
+      },
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.fn('NOW'),
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.fn('NOW'),
+      },
+    });
 
     /*
-     * STATIONS TABLE (Includes 'state' column)
+     * STATIONS TABLE
      */
-    await queryInterface.sequelize.query(`
-      CREATE TABLE IF NOT EXISTS "stations" (
-        "id" SERIAL PRIMARY KEY,
-        "name" VARCHAR(255) NOT NULL,
-        "brand" VARCHAR(255),
-        "state" VARCHAR(255),
-        "address" VARCHAR(255),
-        "lat" DOUBLE PRECISION NOT NULL,
-        "lng" DOUBLE PRECISION NOT NULL,
-        "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-        "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-      );
-    `);
+    await queryInterface.createTable('stations', {
+      id: {
+        type: Sequelize.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+        allowNull: false,
+      },
+      name: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      brand: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      state: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      address: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      lat: {
+        type: Sequelize.FLOAT,
+        allowNull: false,
+      },
+      lng: {
+        type: Sequelize.FLOAT,
+        allowNull: false,
+      },
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.fn('NOW'),
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.fn('NOW'),
+      },
+    });
 
     /*
      * PRICE REPORTS TABLE
      */
-    await queryInterface.sequelize.query(`
-      CREATE TABLE IF NOT EXISTS "price_reports" (
-        "id" SERIAL PRIMARY KEY,
-        "stationId" INTEGER NOT NULL REFERENCES "stations" ("id") ON UPDATE CASCADE ON DELETE CASCADE,
-        "fuelType" "enum_price_reports_fuelType" NOT NULL DEFAULT 'petrol',
-        "price" DOUBLE PRECISION NOT NULL,
-        "reportedBy" VARCHAR(255) DEFAULT 'anonymous',
-        "fuelAvailable" BOOLEAN NOT NULL DEFAULT true,
-        "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-        "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-      );
-    `);
+    await queryInterface.createTable('price_reports', {
+      id: {
+        type: Sequelize.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+        allowNull: false,
+      },
+      stationId: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'stations',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
+      },
+      fuelType: {
+        type: Sequelize.ENUM('petrol', 'diesel', 'kerosene', 'gas'),
+        allowNull: false,
+        defaultValue: 'petrol',
+      },
+      price: {
+        type: Sequelize.FLOAT,
+        allowNull: false,
+      },
+      reportedBy: {
+        type: Sequelize.STRING,
+        allowNull: true,
+        defaultValue: 'anonymous',
+      },
+      fuelAvailable: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+      },
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.fn('NOW'),
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.fn('NOW'),
+      },
+    });
 
     /*
-     * INDEXES (Safe with IF NOT EXISTS)
+     * INDEXES
      */
-    await queryInterface.sequelize.query(`
-      CREATE INDEX IF NOT EXISTS "price_reports_station_id_idx" ON "price_reports" ("stationId");
-    `);
+    await queryInterface.addIndex('price_reports', ['stationId'], {
+      name: 'price_reports_station_id_idx',
+    });
 
-    await queryInterface.sequelize.query(`
-      CREATE INDEX IF NOT EXISTS "stations_lat_lng_idx" ON "stations" ("lat", "lng");
-    `);
+    await queryInterface.addIndex('stations', ['lat', 'lng'], {
+      name: 'stations_lat_lng_idx',
+    });
 
-    await queryInterface.sequelize.query(`
-      CREATE INDEX IF NOT EXISTS "stations_brand_idx" ON "stations" ("brand");
-    `);
+    await queryInterface.addIndex('stations', ['brand'], {
+      name: 'stations_brand_idx',
+    });
 
-    await queryInterface.sequelize.query(`
-      CREATE INDEX IF NOT EXISTS "stations_state_idx" ON "stations" ("state");
-    `);
+    await queryInterface.addIndex('stations', ['state'], {
+      name: 'stations_state_idx',
+    });
   },
 
   async down(queryInterface) {
-    /*
-     * Drop dependent tables first, then ENUM types.
-     */
     await queryInterface.dropTable('price_reports');
     await queryInterface.dropTable('stations');
     await queryInterface.dropTable('users');
-
-    await queryInterface.sequelize.query(`DROP TYPE IF EXISTS "enum_price_reports_fuelType";`);
-    await queryInterface.sequelize.query(`DROP TYPE IF EXISTS "enum_users_role";`);
   },
 };
