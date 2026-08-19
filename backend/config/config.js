@@ -1,11 +1,5 @@
 require('dotenv').config();
 
-const databaseUrl = process.env.DATABASE_URL;
-
-if (!databaseUrl && process.env.NODE_ENV === 'production') {
-  console.error('CRITICAL ERROR: DATABASE_URL environment variable is missing on Render!');
-}
-
 module.exports = {
   development: {
     use_env_variable: 'DATABASE_URL',
@@ -20,7 +14,7 @@ module.exports = {
   },
 
   production: {
-    url: databaseUrl,
+    use_env_variable: 'DATABASE_URL',
     dialect: 'postgres',
     logging: console.log,
     dialectOptions: {
